@@ -39,3 +39,4 @@ func main() {
 	printSomething("This is the second thing to be printed!", &wg)
 
 }
+
