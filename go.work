@@ -3,4 +3,5 @@ go 1.21.2
 use (
 	./concurrency/challenge-1
 	./concurrency/first-example
+	./concurrency/mutex
 )
