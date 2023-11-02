@@ -4,4 +4,6 @@ use (
 	./concurrency/challenge-1
 	./concurrency/first-example
 	./concurrency/mutex
+	./concurrency/mutex-2
+	./concurrency/producer-consumer
 )
