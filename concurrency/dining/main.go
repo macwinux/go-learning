@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -27,10 +28,13 @@ var philosophers = []Philosopher{
 }
 
 // define unas pocas variables
-var hunger = 3                  //cuantas veces un filosofo come
+var hunger = 2                  //cuantas veces un filosofo come
 var eatTime = 1 * time.Second   //cuanto tarda en comer
-var thinkTime = 3 * time.Second // cuanto tarda un filosofo en pensar
+var thinkTime = 1 * time.Second // cuanto tarda un filosofo en pensar
 var sleepTime = 1 * time.Second // cuanto hay que esperar para imprimir por pantalla
+
+var orderMutex sync.Mutex  // mutex necesario para escribir en el scice
+var orderFinished []string // orden en el que los filosofos terminan
 
 func main() {
 
@@ -38,10 +42,14 @@ func main() {
 	fmt.Println("------------------------------------")
 	fmt.Println("The table is empty.")
 
+	time.Sleep(sleepTime)
+
 	dine()
 
 	fmt.Println("La mesa esta vacia")
-
+	// *** added this
+	time.Sleep(sleepTime)
+	fmt.Printf("Order finished: %s.\n", strings.Join(orderFinished, ", "))
 }
 
 func dine() {
@@ -107,7 +115,7 @@ func diningProblem(philosopher Philosopher, wg *sync.WaitGroup, forks map[int]*s
 		fmt.Printf("\t%s tiene ambos tenedores y esta comiendo.\n", philosopher.name)
 		time.Sleep(eatTime)
 
-		fmt.Printf("\t%s esta pensando", philosopher.name)
+		fmt.Printf("\t%s esta pensando \n", philosopher.name)
 		time.Sleep(thinkTime)
 
 		forks[philosopher.leftFork].Unlock()
@@ -119,4 +127,7 @@ func diningProblem(philosopher Philosopher, wg *sync.WaitGroup, forks map[int]*s
 
 	fmt.Println(philosopher.name, " esta satisfecho.")
 	fmt.Println(philosopher.name, " dejo la mesa.")
+	orderMutex.Lock()
+	orderFinished = append(orderFinished, philosopher.name)
+	orderMutex.Unlock()
 }
