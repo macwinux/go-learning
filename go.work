@@ -8,4 +8,5 @@ use (
 	./concurrency/mutex
 	./concurrency/mutex-2
 	./concurrency/producer-consumer
+	./concurrency/simple-channels
 )
