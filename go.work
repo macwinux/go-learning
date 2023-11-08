@@ -1,9 +1,9 @@
 go 1.21.2
 
 use (
-	.
 	./concurrency/challenge-1
 	./concurrency/dining
+	./concurrency/final-project
 	./concurrency/first-example
 	./concurrency/mutex
 	./concurrency/mutex-2
