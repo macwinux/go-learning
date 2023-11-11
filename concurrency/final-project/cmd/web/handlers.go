@@ -1,6 +1,9 @@
 package main
 
 import (
+	"concurrency/final-project/data"
+	"fmt"
+	"html/template"
 	"net/http"
 )
 
@@ -75,9 +78,70 @@ func (app *Config) RegisterPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.ErrorLog.Println(err)
+	}
 
+	u := data.User{
+		Email:     r.Form.Get("email"),
+		FirstName: r.Form.Get("first-name"),
+		LastName:  r.Form.Get("last-name"),
+		Password:  r.Form.Get("password"),
+		Active:    0,
+		IsAdmin:   0,
+	}
+
+	_, err = u.Insert(u)
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "Unable to create user")
+		app.ErrorLog.Println("%s", err)
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		return
+	}
+
+	//send an activation email
+	url := fmt.Sprintf("http://localhost:8000/activate?email=%s", u.Email)
+	signedURL := GenerateTokenFromString(url)
+	app.InfoLog.Println(signedURL)
+	msg := Message{
+		To:       u.Email,
+		Subject:  "Activate your account",
+		Template: "confirmation-email",
+		Data:     template.HTML(signedURL),
+	}
+
+	app.sendEmail(msg)
+	app.Session.Put(r.Context(), "flash", "Confirmation email sent. Check your email.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *Config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 
+	url := r.RequestURI
+	app.InfoLog.Println(url)
+	testURL := fmt.Sprintf("http://localhost%s", url)
+	okay := VerifyToken(testURL)
+
+	if !okay {
+		app.Session.Put(r.Context(), "error", "Invalid token.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	u, err := app.Models.User.GetByEmail(r.URL.Query().Get("email"))
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "No user found.")
+	}
+
+	u.Active = 1
+	err = u.Update()
+	if err != nil {
+		app.Session.Put(r.Context(), "error", "Unable to update user.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	app.Session.Put(r.Context(), "flash", "Acount activated. You can now log in.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

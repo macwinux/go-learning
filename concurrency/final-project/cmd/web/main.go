@@ -21,7 +21,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-const webPort = "85"
+const webPort = "8000"
 
 func main() {
 	db := initDB()
